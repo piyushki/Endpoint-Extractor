@@ -1,71 +1,82 @@
-# Endpoint-Extractor
-JavaScript snippet for extracting API endpoints and routes directly from a loaded web application using the browser console.
+# Endpoint Discovery Workflow
 
-Designed for reconnaissance during web security testing and client-side analysis.
+## Phase 1 — Runtime Endpoint Extraction (Browser Console)
 
----
+### Objective
+Extract endpoints exposed during active application execution.
 
-## What It Extracts
+### Tool
+`Endpoint-Extractor.js`
 
-- Absolute URLs (`https://example.com/api`)
-- Relative paths (`/api/v1/users`)
-- `api/*` style routes
-- Endpoints referenced in:
-  - HTML source
-  - Inline scripts
-  - Loaded JavaScript files
-  - XHR / fetch requests already executed
+### Execution
+- Open target in browser
+- Open DevTools → Console
+- Paste and execute `Endpoint-Extractor.js`
 
-Static assets (images, fonts, CSS) are excluded.
+### Coverage
+- DOM HTML
+- Inline JavaScript
+- In-memory loaded JavaScript
+- XHR / fetch requests already fired
 
----
-
-## How It Works
-
-1. Collects multiple runtime sources from the browser:
-   - DOM HTML
-   - Inline JavaScript
-   - Loaded script URLs
-   - Network resources (XHR / fetch)
-2. Applies a regex to identify endpoint-like strings
-3. Deduplicates results
-4. Sorts and copies output to clipboard
-
----
-
-## Usage
-
-1. Open target site in a browser
-2. Open DevTools → Console
-3. Paste the contents of `Extract-endpoints.js`
-4. Press Enter
-5. Endpoints are copied to clipboard
-
----
-
-## Output
-
+### Output
 - One endpoint per line
+- Deduplicated
 - Sorted
-- Ready for:
-  - Burp Suite
-  - Wordlists
-  - Endpoint categorization
-  - Further fuzzing
+- Copied to clipboard
+
+### Properties
+- Runtime-based
+- Low noise
+- Misses dormant or gated routes
 
 ---
 
-## Limitations
+## Phase 2 — Static JavaScript Enumeration (Katana)
 
-- Only captures requests already triggered
-- No authentication replay
-- Regex-based, not AST-aware
+### Objective
+Extract endpoints embedded in JavaScript that are not executed in the current session.
+
+### Preparation
+- Gather all `.js` URLs from:
+  - `<script src>` tags
+  - Dynamically injected scripts
+
+### Tool
+Katana
+
+### Execution Logic
+- Feed collected JavaScript URLs into Katana
+- Enable JavaScript parsing and endpoint discovery
+
+### Coverage
+- Untriggered API routes
+- Feature-flagged endpoints
+- Admin-only paths
+- Legacy and fallback APIs
+- Commented or dead routes
+
+### Output
+- Raw endpoint candidates
+- Requires filtering and validation
+
+### Properties
+- Static analysis
+- High recall
+- High noise
 
 ---
 
-## Use Case
+## Recon Model
 
-- Client-side recon
-- Bug bounty endpoint discovery
-- SPA / React / Vue applications
-- Quick mapping before manual testing
+- Phase 1: What the application is using
+- Phase 2: What the application contains
+
+Combined output approximates full client-side attack surface.
+
+---
+
+## Order Constraint
+
+Phase 1 precedes Phase 2.  
+Runtime context guides static validation.
